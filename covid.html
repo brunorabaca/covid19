@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Covid no Brasil</title>
+    <!-- Load c3.css -->
+    <link href="c3.min.css" rel="stylesheet">
+
+    <!-- Load d3.js and c3.js -->
+    <script src="d3.min.js" charset="utf-8"></script>
+    <script src="c3.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 90%;
+        }
+        /*.c3-line {
+            stroke-width: 3px;
+        }
+        .c3-circle {
+            stroke-width: 5px !important;
+            stroke: rgb(31, 119, 180);;
+        }*/
+    </style>
+</head>
+<body>
+    <div id="container-confirmados" class="container">
+        <h3>Casos Confirmados</h3>
+        <div id="graficoCasosConfirmados"></div>
+    </div>
+
+    <!-- A api não esta funcionando com as mortes-->
+    <!--<div id="container-mortes" class="container">
+        <h3>Mortes</h3>
+        <div id="graficoMortes"></div>
+    </div>-->
+    <script>
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                var resposta = JSON.parse(this.responseText)               
+                console.log(resposta)
+                for(let i = 0; i < resposta.length; i++) {
+                    resposta[i].data = "2020-" + resposta[i].label.substring(3,5) + '-' +  resposta[i].label.substring(0,2)
+                    if(i == 0) {
+                        resposta[i].totalConfirmados = resposta[i].qtd_confirmation
+                        resposta[i].totalMortes = resposta[i].qtd_death
+                    } else {
+                        resposta[i].totalConfirmados = resposta[i].qtd_confirmation + resposta[i - 1].totalConfirmados
+                        resposta[i].totalMortes = resposta[i].qtd_death + resposta[i - 1].totalMortes
+                    }
+                }
+
+                c3.generate({
+                    bindto: '#graficoCasosConfirmados',
+                    data: {
+                        x: 'x',
+                        columns: [
+                            ['x', ...resposta.map(o => o.data)],
+                            ['Total', ...resposta.map(o => o.totalConfirmados)],
+                            ['Diario', ...resposta.map(o => o.qtd_confirmation)]
+                        ],
+                        types: {
+                            Diario: 'bar' 
+                        },
+                        axes: {
+                            Total: 'y',
+                            Diario: 'y2'
+                        }
+                    },
+                    axis: {
+                        x: {
+                                type: 'timeseries',
+                                tick: {
+                                    rotate: 75,
+                                    format: '%d/%m',
+                                    fit:true,
+                                    outer: false,
+                                    culling: {
+                                        max: window.innerWidth > 800 ? 999 : 4
+                                    }
+                                },
+                        },
+                        y: {
+                            label: {
+                                text: 'Total',
+                                position: 'outer-middle'
+                            }
+                        },
+                        y2: {
+                            show: true,
+                            label: {
+                                text: 'Novos Casos',
+                                position: 'outer-middle'
+                            }
+                        }
+                    },
+                    onresized: function () {
+    
+                        window.innerWidth > 800 ? chart.internal.config.axis_x_tick_culling_max = 999 : chart.internal.config.axis_x_tick_culling_max = 4;
+}
+                });
+                /*
+                c3.generate({
+                    bindto: '#graficoMortes',
+                    data: {
+                    columns: [
+                        ['Total', ...resposta.map(o => o.totalMortes)],
+                        ['Diario', ...resposta.map(o => o.qtd_death)]
+                    ],
+                    types: {
+                        Diario: 'bar' 
+                    }
+                    },
+                    axis: {
+                        x: {
+                                type: 'category',
+                                categories: resposta.map(o => o.label)
+                            },
+                    y: {
+                        label: {
+                        text: 'Y Label',
+                        position: 'outer-middle'
+                        }
+                    }
+                    }
+                });
+                */
+            }
+        };
+        xhttp.open("GET", "https://api.covid19.finspect.me/brcovid19/day", true);
+        xhttp.send();
+    </script>
+</body>
+</html>
