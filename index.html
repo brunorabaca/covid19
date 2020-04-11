@@ -52,7 +52,6 @@
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 var resposta = JSON.parse(this.responseText)               
-                console.log(resposta)
                 for(let i = 0; i < resposta.length; i++) {
                     resposta[i].data = "2020-" + resposta[i].label.substring(3,5) + '-' +  resposta[i].label.substring(0,2)
                     if(i == 0) {
@@ -109,7 +108,6 @@
                         }
                     },
                     onresized: function () {
-                        console.log("mudou")
                         window.innerWidth > 800 ? grafico.internal.config.axis_x_tick_culling_max = 999 : grafico.internal.config.axis_x_tick_culling_max = 5;
                         grafico.resize();
 }
