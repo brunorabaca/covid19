@@ -26,6 +26,9 @@
         #graficoCasosConfirmados {
             width: 100%;
         }
+        #graficoCasosConfirmadosPorSemana {
+            width: 100%;
+        }
         /*.c3-line {
             stroke-width: 3px;
         }
@@ -41,19 +44,35 @@
         <div id="graficoCasosConfirmados"></div>
     </div>
 
+    <div id="container-confirmados-semana" class="container">
+        <h3>Casos Confirmados Por Semana</h3>
+        <div id="graficoCasosConfirmadosPorSemana"></div>
+    </div>
+
     <!-- A api não esta funcionando com as mortes-->
     <!--<div id="container-mortes" class="container">
         <h3>Mortes</h3>
         <div id="graficoMortes"></div>
     </div>-->
     <script>
+        Date.prototype.getWeek = function() {
+            var date = new Date(this.getTime());
+            date.setHours(0, 0, 0, 0);
+            date.setDate(date.getDate() + 3 - (date.getDay() ) % 7);
+            var week1 = new Date(date.getFullYear(), 0, 4);
+            return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
+                                    - 3 + (week1.getDay() ) % 7) / 7);
+        }
         var xhttp = new XMLHttpRequest();
-        var grafico;
+        var graficoConfirmados;
+        var graficoConfirmadosPorSemana;
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
-                var resposta = JSON.parse(this.responseText)               
+                var resposta = JSON.parse(this.responseText)
+                var casosPorSemana = []              
                 for(let i = 0; i < resposta.length; i++) {
-                    resposta[i].data = "2020-" + resposta[i].label.substring(3,5) + '-' +  resposta[i].label.substring(0,2)
+                    resposta[i].dataString = "2020-" + resposta[i].label.substring(3,5) + '-' +  resposta[i].label.substring(0,2)
+                    resposta[i].data = new Date("2020", resposta[i].label.substring(3,5) - 1, resposta[i].label.substring(0,2))
                     if(i == 0) {
                         resposta[i].totalConfirmados = resposta[i].qtd_confirmation
                         resposta[i].totalMortes = resposta[i].qtd_death
@@ -61,14 +80,20 @@
                         resposta[i].totalConfirmados = resposta[i].qtd_confirmation + resposta[i - 1].totalConfirmados
                         resposta[i].totalMortes = resposta[i].qtd_death + resposta[i - 1].totalMortes
                     }
+                    
+                    if(casosPorSemana[resposta[i].data.getWeek()] == undefined) {
+                        casosPorSemana[resposta[i].data.getWeek()] = [resposta[i].dataString, resposta[i].qtd_confirmation]
+                    } else {
+                        casosPorSemana[resposta[i].data.getWeek()][1] += resposta[i].qtd_confirmation
+                    }
                 }
 
-                grafico = c3.generate({
+                graficoConfirmados = c3.generate({
                     bindto: '#graficoCasosConfirmados',
                     data: {
                         x: 'x',
                         columns: [
-                            ['x', ...resposta.map(o => o.data)],
+                            ['x', ...resposta.map(o => o.dataString)],
                             ['Total', ...resposta.map(o => o.totalConfirmados)],
                             ['Diario', ...resposta.map(o => o.qtd_confirmation)]
                         ],
@@ -108,10 +133,37 @@
                         }
                     },
                     onresized: function () {
-                        window.innerWidth > 800 ? grafico.internal.config.axis_x_tick_culling_max = 999 : grafico.internal.config.axis_x_tick_culling_max = 5;
-                        grafico.resize();
-}
-                    });
+                        window.innerWidth > 800 ? graficoConfirmados.internal.config.axis_x_tick_culling_max = 999 : graficoConfirmados.internal.config.axis_x_tick_culling_max = 5;
+                        graficoConfirmados.resize();
+                    }
+                });
+                graficoConfirmadosPorSemana = c3.generate({
+                    bindto: '#graficoCasosConfirmadosPorSemana',
+                    data: {
+                        x: 'x',
+                        columns: [
+                            ['x', ...casosPorSemana.filter(o => o !== undefined).map(o => o[0])],
+                            ['Total', ...casosPorSemana.filter(o => o !== undefined).map(o => o[1])],
+                        ],
+                        axes: {
+                            Total: 'y'
+                        }
+                    },
+                    axis: {
+                        x: {
+                                type: 'timeseries',
+                                tick: {
+                                    rotate: 75,
+                                    format: '%d/%m',
+                                    fit:true,
+                                    outer: false,
+                                },
+                        },
+                    },
+                    onresized: function () {
+                        graficoConfirmadosPorSemana.resize();
+                    }
+                });
                 /*
                 c3.generate({
                     bindto: '#graficoMortes',
