@@ -63,73 +63,83 @@
             return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000
                                     - 3 + (week1.getDay() ) % 7) / 7);
         }
+        const calcMS = (response, ms, i) => {
+            if(i >= ms) {
+                let resp = 0
+                for(let ii = i - ms; ii <= i; ii++) {
+                    resp += response.dias[ii].casosNovos
+                }
+                return resp / ms
+            }
+            return 0
+        }
+        const calcMSSemana = (response, ms, i) => {
+            if(i >= ms) {
+                let resp = 0
+                for(let ii = i - ms; ii <= i; ii++) {
+                    resp += response.semana[ii].casosNovos
+                }
+                return resp / ms
+            }
+            return 0
+        }
+        const calcMME2 = (response, mme, i, valor) => {
+            if(i >= mme) {
+                const atual = calcMS(response, mme, i)
+                const k = 2 / (mme + 1)
+                let resp = (atual - response.dias[i - 1].mme[mme])*k + response.dias[i - 1].mme[mme]
+                return resp
+            }
+            return 0
+        }
+        const calcMME2Semana = (response, mme, i, valor) => {
+            if(i >= mme) {
+                const atual = calcMSSemana(response, mme, i)
+                const k = 2 / (mme + 1)
+                let resp = (atual - response.semana[i - 1].mme[mme])*k + response.semana[i - 1].mme[mme]
+                return resp
+            }
+            return 0
+        }
+        const calcMME = (response, mme, i, valor) => {
+            if(i >= mme) {
+                const k = 2 / (mme + 1)
+                let resp = valor * k + (response.dias[i - 1].mme[mme] ? response.dias[i - 1].mme[mme] : 0) * (1 - k)
+                return resp
+            }
+            return 0
+        }
+        const calcMMESemana = (response, mme, i, valor) => {
+            if(i >= mme) {
+                const k = 2 / (mme + 1)
+                let resp = valor * k + (response.semana[i - 1].mme[mme] ? response.semana[i - 1].mme[mme] : 0) * (1 - k)
+                return resp
+            }
+            return 0
+        }
         var xhttp = new XMLHttpRequest();
         var graficoConfirmados;
         var graficoConfirmadosPorSemana;
         xhttp.onreadystatechange = function() {
             if (this.readyState == 4 && this.status == 200) {
                 var resposta = JSON.parse(this.responseText)
-                var casosPorSemana = []              
-                for(let i = 0; i < resposta.length; i++) {
-                    resposta[i].dataString = "2020-" + resposta[i].label.substring(3,5) + '-' +  resposta[i].label.substring(0,2)
-                    resposta[i].data = new Date("2020", resposta[i].label.substring(3,5) - 1, resposta[i].label.substring(0,2))
-                    if(i == 0) {
-                        resposta[i].totalConfirmados = resposta[i].qtd_confirmation
-                        resposta[i].totalMortes = resposta[i].qtd_death
-                    } else {
-                        resposta[i].totalConfirmados = resposta[i].qtd_confirmation + resposta[i - 1].totalConfirmados
-                        resposta[i].totalMortes = resposta[i].qtd_death + resposta[i - 1].totalMortes
-                    }
-                    
-                    if(casosPorSemana[resposta[i].data.getWeek()] == undefined) {
-                        casosPorSemana[resposta[i].data.getWeek()] = [resposta[i].dataString, resposta[i].qtd_confirmation]
-                    } else {
-                        casosPorSemana[resposta[i].data.getWeek()][1] += resposta[i].qtd_confirmation
-                    }
+                for(let i = 0; i < resposta.dias.length; i++) {
+                    resposta.dias[i].mme = []
+                    resposta.dias[i].mme[7] = calcMME(resposta, 7, i, resposta.dias[i].casosNovos)
+                    resposta.dias[i].mme[17] = calcMME(resposta, 17, i, resposta.dias[i].casosNovos)
+                    resposta.dias[i].mme[72] = calcMME(resposta, 72, i, resposta.dias[i].casosNovos)
                 }
-
                 graficoConfirmados = c3.generate({
                     bindto: '#graficoCasosConfirmados',
                     data: {
-                        x: 'x',
                         columns: [
-                            ['x', ...resposta.map(o => o.dataString)],
-                            ['Total', ...resposta.map(o => o.totalConfirmados)],
-                            ['Diario', ...resposta.map(o => o.qtd_confirmation)]
+                            ['MME 7', ...resposta.dias.map(o => o.mme[7])],
+                            ['MME 17', ...resposta.dias.map(o => o.mme[17])],
+                            ['MME 72', ...resposta.dias.map(o => o.mme[72])],
+                            ['Diario', ...resposta.dias.map(o => o.casosNovos)]
                         ],
                         types: {
                             Diario: 'bar' 
-                        },
-                        axes: {
-                            Total: 'y',
-                            Diario: 'y2'
-                        }
-                    },
-                    axis: {
-                        x: {
-                                type: 'timeseries',
-                                tick: {
-                                    rotate: 75,
-                                    format: '%d/%m',
-                                    fit:true,
-                                    outer: false,
-                                    culling: {
-                                        max: window.innerWidth > 800 ? 999 : 5
-                                    }
-                                },
-                        },
-                        y: {
-                            label: {
-                                text: 'Total',
-                                position: 'outer-middle'
-                            }
-                        },
-                        y2: {
-                            show: true,
-                            label: {
-                                text: 'Novos Casos',
-                                position: 'outer-middle'
-                            }
                         }
                     },
                     onresized: function () {
@@ -137,62 +147,32 @@
                         graficoConfirmados.resize();
                     }
                 });
+                for(let i = 0; i < resposta.semana.length; i++) {
+                    resposta.semana[i].mme = []
+                    resposta.semana[i].mme[7] = calcMMESemana(resposta, 7, i, resposta.semana[i].casosNovos)
+                    resposta.semana[i].mme[17] = calcMMESemana(resposta, 17, i, resposta.semana[i].casosNovos)
+                    resposta.semana[i].mme[72] = calcMMESemana(resposta, 72, i, resposta.semana[i].casosNovos)
+                }
                 graficoConfirmadosPorSemana = c3.generate({
                     bindto: '#graficoCasosConfirmadosPorSemana',
                     data: {
-                        x: 'x',
                         columns: [
-                            ['x', ...casosPorSemana.filter(o => o !== undefined).map(o => o[0])],
-                            ['Total', ...casosPorSemana.filter(o => o !== undefined).map(o => o[1])],
+                            ['MME 7', ...resposta.semana.map(o => o.mme[7])],
+                            ['MME 17', ...resposta.semana.map(o => o.mme[17])],
+                            ['MME 72', ...resposta.semana.map(o => o.mme[72])],
+                            ['Semanal', ...resposta.semana.map(o => o.casosNovos)],
                         ],
-                        axes: {
-                            Total: 'y'
+                        types: {
+                            Semanal: 'bar' 
                         }
-                    },
-                    axis: {
-                        x: {
-                                type: 'timeseries',
-                                tick: {
-                                    rotate: 75,
-                                    format: '%d/%m',
-                                    fit:true,
-                                    outer: false,
-                                },
-                        },
                     },
                     onresized: function () {
                         graficoConfirmadosPorSemana.resize();
                     }
                 });
-                /*
-                c3.generate({
-                    bindto: '#graficoMortes',
-                    data: {
-                    columns: [
-                        ['Total', ...resposta.map(o => o.totalMortes)],
-                        ['Diario', ...resposta.map(o => o.qtd_death)]
-                    ],
-                    types: {
-                        Diario: 'bar' 
-                    }
-                    },
-                    axis: {
-                        x: {
-                                type: 'category',
-                                categories: resposta.map(o => o.label)
-                            },
-                    y: {
-                        label: {
-                        text: 'Y Label',
-                        position: 'outer-middle'
-                        }
-                    }
-                    }
-                });
-                */
             }
         };
-        xhttp.open("GET", "https://api.covid19.finspect.me/brcovid19/day", true);
+        xhttp.open("GET", "https://xx9p7hp1p7.execute-api.us-east-1.amazonaws.com/prod/PortalCasos", true);
         xhttp.send();
     </script>
 </body>
