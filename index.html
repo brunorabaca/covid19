@@ -151,7 +151,7 @@
                     resposta.semana[i].mme = []
                     resposta.semana[i].mme[7] = calcMMESemana(resposta, 7, i, resposta.semana[i].casosNovos)
                     resposta.semana[i].mme[17] = calcMMESemana(resposta, 17, i, resposta.semana[i].casosNovos)
-                    resposta.semana[i].mme[72] = calcMMESemana(resposta, 72, i, resposta.semana[i].casosNovos)
+                    resposta.semana[i].mme[34] = calcMMESemana(resposta, 34, i, resposta.semana[i].casosNovos)
                 }
                 graficoConfirmadosPorSemana = c3.generate({
                     bindto: '#graficoCasosConfirmadosPorSemana',
@@ -159,7 +159,7 @@
                         columns: [
                             ['MME 7', ...resposta.semana.map(o => o.mme[7])],
                             ['MME 17', ...resposta.semana.map(o => o.mme[17])],
-                            ['MME 72', ...resposta.semana.map(o => o.mme[72])],
+                            ['MME 34', ...resposta.semana.map(o => o.mme[34])],
                             ['Semanal', ...resposta.semana.map(o => o.casosNovos)],
                         ],
                         types: {
