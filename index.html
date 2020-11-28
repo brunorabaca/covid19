@@ -29,6 +29,12 @@
         #graficoCasosConfirmadosPorSemana {
             width: 100%;
         }
+        #graficoObitosConfirmados {
+            width: 100%;
+        }
+        #graficoObitosConfirmadosPorSemana {
+            width: 100%;
+        }
         /*.c3-line {
             stroke-width: 3px;
         }
@@ -185,7 +191,7 @@
                             }
                         },
                         onresized: function () {
-                            window.innerWidth > 800 ? graficoConfirmados.internal.config.axis_x_tick_culling_max = 999 : graficoConfirmados.internal.config.axis_x_tick_culling_max = 5;
+                            window.innerWidth > 800 ? graficoObitos.internal.config.axis_x_tick_culling_max = 999 : graficoObitos.internal.config.axis_x_tick_culling_max = 5;
                             graficoObitos.resize();
                         }
                     });
@@ -201,7 +207,7 @@
                             }
                         },
                         onresized: function () {
-                            graficoConfirmadosPorSemana.resize();
+                            graficoObitosPorSemana.resize();
                         }
                     });
                 })
