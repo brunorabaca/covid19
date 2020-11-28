@@ -49,11 +49,16 @@
         <div id="graficoCasosConfirmadosPorSemana"></div>
     </div>
 
-    <!-- A api não esta funcionando com as mortes-->
-    <!--<div id="container-mortes" class="container">
-        <h3>Mortes</h3>
-        <div id="graficoMortes"></div>
-    </div>-->
+    <div id="container-obitos" class="container">
+        <h3>Obtos Confirmados</h3>
+        <div id="graficoObitosConfirmados"></div>
+    </div>
+
+    <div id="container-obitos-semana" class="container">
+        <h3>Obtos Confirmados Por Semana</h3>
+        <div id="graficoObitosConfirmadosPorSemana"></div>
+    </div>
+
     <script>
         Date.prototype.getWeek = function() {
             var date = new Date(this.getTime());
@@ -117,63 +122,91 @@
             }
             return 0
         }
-        var xhttp = new XMLHttpRequest();
-        var graficoConfirmados;
-        var graficoConfirmadosPorSemana;
-        xhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                var resposta = JSON.parse(this.responseText)
-                for(let i = 0; i < resposta.dias.length; i++) {
-                    resposta.dias[i].mme = []
-                    resposta.dias[i].mme[7] = calcMME(resposta, 7, i, resposta.dias[i].casosNovos)
-                    resposta.dias[i].mme[17] = calcMME(resposta, 17, i, resposta.dias[i].casosNovos)
-                    resposta.dias[i].mme[72] = calcMME(resposta, 72, i, resposta.dias[i].casosNovos)
-                }
-                graficoConfirmados = c3.generate({
-                    bindto: '#graficoCasosConfirmados',
-                    data: {
-                        columns: [
-                            ['MME 7', ...resposta.dias.map(o => o.mme[7])],
-                            ['MME 17', ...resposta.dias.map(o => o.mme[17])],
-                            ['MME 72', ...resposta.dias.map(o => o.mme[72])],
-                            ['Diario', ...resposta.dias.map(o => o.casosNovos)]
-                        ],
-                        types: {
-                            Diario: 'bar' 
-                        }
-                    },
-                    onresized: function () {
-                        window.innerWidth > 800 ? graficoConfirmados.internal.config.axis_x_tick_culling_max = 999 : graficoConfirmados.internal.config.axis_x_tick_culling_max = 5;
-                        graficoConfirmados.resize();
+
+        fetch("https://xx9p7hp1p7.execute-api.us-east-1.amazonaws.com/prod/PortalCasos").then(
+            function(response) {
+                response.json().then(function(resposta) {
+                    for(let i = 0; i < resposta.dias.length; i++) {
+                        resposta.dias[i].mme = []
+                        resposta.dias[i].mme[7] = calcMME(resposta, 7, i, resposta.dias[i].casosNovos)
+                        resposta.dias[i].mme[17] = calcMME(resposta, 17, i, resposta.dias[i].casosNovos)
+                        resposta.dias[i].mme[72] = calcMME(resposta, 72, i, resposta.dias[i].casosNovos)
                     }
-                });
-                for(let i = 0; i < resposta.semana.length; i++) {
-                    resposta.semana[i].mme = []
-                    resposta.semana[i].mme[7] = calcMMESemana(resposta, 7, i, resposta.semana[i].casosNovos)
-                    resposta.semana[i].mme[17] = calcMMESemana(resposta, 17, i, resposta.semana[i].casosNovos)
-                    resposta.semana[i].mme[34] = calcMMESemana(resposta, 34, i, resposta.semana[i].casosNovos)
-                }
-                graficoConfirmadosPorSemana = c3.generate({
-                    bindto: '#graficoCasosConfirmadosPorSemana',
-                    data: {
-                        columns: [
-                            ['MME 7', ...resposta.semana.map(o => o.mme[7])],
-                            ['MME 17', ...resposta.semana.map(o => o.mme[17])],
-                            ['MME 34', ...resposta.semana.map(o => o.mme[34])],
-                            ['Semanal', ...resposta.semana.map(o => o.casosNovos)],
-                        ],
-                        types: {
-                            Semanal: 'bar' 
+                    let graficoConfirmados = c3.generate({
+                        bindto: '#graficoCasosConfirmados',
+                        data: {
+                            columns: [
+                                ['MME 7', ...resposta.dias.map(o => o.mme[7])],
+                                ['MME 17', ...resposta.dias.map(o => o.mme[17])],
+                                ['MME 72', ...resposta.dias.map(o => o.mme[72])],
+                                ['Diario', ...resposta.dias.map(o => o.casosNovos)]
+                            ],
+                            types: {
+                                Diario: 'bar' 
+                            }
+                        },
+                        onresized: function () {
+                            window.innerWidth > 800 ? graficoConfirmados.internal.config.axis_x_tick_culling_max = 999 : graficoConfirmados.internal.config.axis_x_tick_culling_max = 5;
+                            graficoConfirmados.resize();
                         }
-                    },
-                    onresized: function () {
-                        graficoConfirmadosPorSemana.resize();
+                    });
+                    for(let i = 0; i < resposta.semana.length; i++) {
+                        resposta.semana[i].mme = []
+                        resposta.semana[i].mme[7] = calcMMESemana(resposta, 7, i, resposta.semana[i].casosNovos)
+                        resposta.semana[i].mme[17] = calcMMESemana(resposta, 17, i, resposta.semana[i].casosNovos)
+                        resposta.semana[i].mme[30] = calcMMESemana(resposta, 30, i, resposta.semana[i].casosNovos)
                     }
-                });
+                    let graficoConfirmadosPorSemana = c3.generate({
+                        bindto: '#graficoCasosConfirmadosPorSemana',
+                        data: {
+                            columns: [
+                                ['MME 7', ...resposta.semana.map(o => o.mme[7])],
+                                ['MME 17', ...resposta.semana.map(o => o.mme[17])],
+                                ['MME 30', ...resposta.semana.map(o => o.mme[30])],
+                                ['Semanal', ...resposta.semana.map(o => o.casosNovos)],
+                            ],
+                            types: {
+                                Semanal: 'bar' 
+                            }
+                        },
+                        onresized: function () {
+                            graficoConfirmadosPorSemana.resize();
+                        }
+                    });
+
+                    let graficoObitos = c3.generate({
+                        bindto: '#graficoObitosConfirmados',
+                        data: {
+                            columns: [
+                                ['Diario', ...resposta.dias.map(o => o.obitosNovos)]
+                            ],
+                            types: {
+                                Diario: 'bar' 
+                            }
+                        },
+                        onresized: function () {
+                            window.innerWidth > 800 ? graficoConfirmados.internal.config.axis_x_tick_culling_max = 999 : graficoConfirmados.internal.config.axis_x_tick_culling_max = 5;
+                            graficoObitos.resize();
+                        }
+                    });
+
+                    let graficoObitosPorSemana = c3.generate({
+                        bindto: '#graficoObitosConfirmadosPorSemana',
+                        data: {
+                            columns: [
+                                ['Semanal', ...resposta.semana.map(o => o.obitosNovos)],
+                            ],
+                            types: {
+                                Semanal: 'bar' 
+                            }
+                        },
+                        onresized: function () {
+                            graficoConfirmadosPorSemana.resize();
+                        }
+                    });
+                })
             }
-        };
-        xhttp.open("GET", "https://xx9p7hp1p7.execute-api.us-east-1.amazonaws.com/prod/PortalCasos", true);
-        xhttp.send();
+        )
     </script>
 </body>
 </html>
