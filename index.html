@@ -133,6 +133,11 @@
             function(response) {
                 response.json().then(function(resposta) {
                     for(let i = 0; i < resposta.dias.length; i++) {
+                        if(i==1) {
+                            resposta.dias[i].casosNovos = 0
+                            resposta.dias[i].obitosNovos = 0
+                        }
+                        
                         resposta.dias[i].mme = []
                         resposta.dias[i].mme[7] = calcMME(resposta, 7, i, resposta.dias[i].casosNovos)
                         resposta.dias[i].mme[17] = calcMME(resposta, 17, i, resposta.dias[i].casosNovos)
