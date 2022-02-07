@@ -133,7 +133,7 @@
             function(response) {
                 response.json().then(function(resposta) {
                     for(let i = 0; i < resposta.dias.length; i++) {
-                        if(i==1) {
+                        if(i==1 || i ==2) {
                             resposta.dias[i].casosNovos = 0
                             resposta.dias[i].obitosNovos = 0
                         }
